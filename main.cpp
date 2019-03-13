@@ -1,11 +1,15 @@
 #include<iostream>
 #include<vector>
 #include<string>
+#include <regex>
 
 #include "thing.h"
 
 std::string priorities[4] = { "+", "-", "/", "*" };
 bool error = false;
+
+std::regex number("-?\\d+");
+std::regex function("[a-zA-Z]\\w*\\(([a-zA-Z]\\w*)?(\\,[a-zA-Z]\\w*)*\\)");
 
 Thing* parse(const std::vector<std::string>* elements, int l, int r) {
 	if (l >= r) {
@@ -27,19 +31,43 @@ Thing* parse(const std::vector<std::string>* elements, int l, int r) {
 		return NULL;
 	}
 
-	std::string str = (*elements)[l];
-	bool is_number = true;
-	for ( std::string::iterator it = str.begin() + (str[0] == '-' ? 1 : 0); it != str.end(); ++it)
-		if (not isdigit(*it))
-			is_number = false;
 
-	if (is_number) {
+	std::string str = (*elements)[l];
+	if (regex_match(str, number)) {
 		return new Thing(str);
-	} else {
-		error = true;
-		return NULL;
 	}
+
+	if (regex_match(str, function)) {
+		std::vector<std::string> args_vec;
+
+		bool flg = false;
+		std::string temp = "", name = "";
+		for(std::string::iterator it = str.begin(); it != str.end(); ++it) {
+			if (*it == '(') {
+				flg = true;
+				name = temp;
+				temp = "";
+				continue;
+			}
+
+			if (flg) {
+				if (*it == ',' || *it == ')') {
+					args_vec.push_back(temp);
+					temp = "";
+				} else
+					temp.push_back(*it);
+			} else {
+				temp.push_back(*it);
+			}
+		}
+
+		return new Thing(new Func(name, &args_vec));
+	}
+
+	error = true;
+	return NULL;
 }
+
 
 int main() {
 	std::string input;
@@ -66,5 +94,12 @@ int main() {
 		return -1;
 	}
 
-	std::cout << t->eval() << std::endl;
+	int result = t->eval();
+
+	if (error) {
+		std::cout << "ERROR" << std::endl;
+		return -1;
+	}
+
+	std::cout << result << std::endl;
 }

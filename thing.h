@@ -1,16 +1,27 @@
+#ifndef CALC_THING_H
+#define CALC_THING_H
+
 #include<string>
+
+#include "func.h"
 
 
 class Thing {
-	public:
-		char type;
-		Thing* l;
-		Thing* r;
+public:
+    char type;
+    Thing *l;
+    Thing *r;
 
-		std::string str;
+    std::string str;
+    Func *func;
 
-		Thing(std::string str);
-		Thing(char type, Thing* l, Thing* r);
+    Thing(std::string str);
 
-		int eval();
+    Thing(Func *func);
+
+    Thing(char type, Thing *l, Thing *r);
+
+    int eval();
 };
+
+#endif
